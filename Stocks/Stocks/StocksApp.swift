@@ -14,7 +14,7 @@ struct StocksApp: App {
     @StateObject private var feedControlsViewModel: StockToolbarViewModel
     
     init() {
-        let service = StockFeedService()
+        let service = StockFeedService(assetsListService: AssetsListService())
         _stockFeedService = StateObject(wrappedValue: service)
         _feedControlsViewModel = StateObject(wrappedValue: StockToolbarViewModel(stockFeedService: service))
     }

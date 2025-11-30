@@ -14,11 +14,7 @@ struct StocksView: View {
     
     @State private var navigationPath = NavigationPath()
     
-    @State var stocks = [
-        "AAPL", "GOOG", "TSLA", "AMZN", "MSFT", "NVDA", "META", "NFLX",
-        "DIS", "BABA", "V", "JPM", "WMT", "JNJ", "MA", "PG", "UNH",
-        "HD", "PYPL", "INTC", "CMCSA", "VZ", "ADBE", "PFE", "BAC"
-    ].map {
+    @State var stocks = AssetsListService().stocks.map {
         StockRowModel(stockName: $0, stockPrice: 0)
     }
     
@@ -46,7 +42,7 @@ extension StocksView {
 
 #Preview {
     
-    let stockFeedService = StockFeedService()
+    let stockFeedService = StockFeedService(assetsListService: AssetsListService())
     let feedControlsViewModel = StockToolbarViewModel(stockFeedService: stockFeedService)
     StocksView()
         .environmentObject(stockFeedService)

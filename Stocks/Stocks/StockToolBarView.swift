@@ -26,12 +26,13 @@ struct StockToolBarView: ToolbarContent {
             Button(action: {
                 viewModel.toggleConnection()
             }) {
-                Text("Start")
+                Text(viewModel.isConnected ? "Stop" : "Start")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
+                    .background(viewModel.isConnected ? Color.red : Color.green)
                     .cornerRadius(8)
             }
         }

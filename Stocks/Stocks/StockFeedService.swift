@@ -16,7 +16,7 @@ protocol StockFeedServiceProtocol {
 
 final class StockFeedService: ObservableObject {
 
-    @Published var isConnected: Bool = false
+    @Published private(set) var isConnected: Bool = false
     
     func toggleConnection() {
         isConnected.toggle()

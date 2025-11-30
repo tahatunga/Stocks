@@ -16,6 +16,14 @@ class StockToolbarViewModel: ObservableObject {
     
     init(stockFeedService: StockFeedService) {
         self.stockFeedService = stockFeedService
+        self.isConnected = stockFeedService.isConnected
+        setupBindings()
+    }
+
+    private func setupBindings() {
+        stockFeedService.$isConnected
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isConnected)
     }
 
     func toggleConnection() {

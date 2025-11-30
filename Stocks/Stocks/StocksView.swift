@@ -45,5 +45,10 @@ extension StocksView {
 }
 
 #Preview {
+    
+    let stockFeedService = StockFeedService()
+    let feedControlsViewModel = StockToolbarViewModel(stockFeedService: stockFeedService)
     StocksView()
+        .environmentObject(stockFeedService)
+        .environmentObject(feedControlsViewModel)
 }

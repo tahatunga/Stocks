@@ -26,7 +26,7 @@ struct StockToolBarView: ToolbarContent {
                 Text("Start")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .cornerRadius(8)

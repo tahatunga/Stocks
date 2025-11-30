@@ -8,11 +8,24 @@
 import SwiftUI
 
 struct StockRowView: View {
+    
+    let viewModel: StockRowViewModel
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        content
     }
 }
 
+extension StockRowView {
+    private var content: some View {
+        HStack {
+            Text(viewModel.stock.stockName)
+            Spacer()
+            Text(String(format: "%.2f", viewModel.stock.stockPrice))
+                .font(.caption)
+        }
+    }
+}
 #Preview {
-    StockRowView()
+    StockRowView(viewModel: StockRowViewModel(stock: StockRowModel(stockName: "AAPL", stockPrice: 250)))
 }

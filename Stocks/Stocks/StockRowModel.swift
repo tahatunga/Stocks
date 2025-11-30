@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct StockRowModel {
+struct StockRowModel: Hashable {
     
     let stockName: String
     var stockPrice: Double

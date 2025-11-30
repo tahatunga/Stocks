@@ -21,7 +21,7 @@ struct StocksApp: App {
     
     var body: some Scene {
         WindowGroup {
-            StocksView()
+            StocksView(viewModel: StocksViewModel(service: stockFeedService, assets: AssetsListService()))
                 .environmentObject(stockFeedService)
                 .environmentObject(feedControlsViewModel)
         }

@@ -26,7 +26,8 @@ final class AssetsListService {
 final class StockFeedService: ObservableObject {
 
     private let assetsListService: AssetsListService
-    private var webSocketTask: URLSessionWebSocketTask?
+    private var socket: URLSessionWebSocketTask?
+    private var updateTimer: Timer?
     
     @Published private(set) var isConnected: Bool = false {
         didSet {
@@ -38,30 +39,58 @@ final class StockFeedService: ObservableObject {
         self.assetsListService = assetsListService
     }
 
+    deinit {
+        stopTimer()
+    }
+
+    private func updateAssetsPrices() {
+        print("Tik")
+    }
+    
+    private func startTimer() {
+        updateTimer?.invalidate()
+        
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.isConnected else { return }
+            self.updateAssetsPrices()
+        }
+        
+        if let timer = updateTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+    
+    private func stopTimer() {
+        updateTimer?.invalidate()
+        updateTimer = nil
+    }
+
     func toggleConnection() {
         if isConnected {
             disconnect()
+            stopTimer()
         } else {
             connect()
+            startTimer()
         }
     }
     
     private func connect() {
-        guard webSocketTask == nil ||
-              webSocketTask?.state == .canceling ||
-              webSocketTask?.state == .completed else {
+        guard socket == nil ||
+              socket?.state == .canceling ||
+              socket?.state == .completed else {
             return
         }
         
-        webSocketTask = URLSession.shared.webSocketTask(with: assetsListService.url)
-        webSocketTask?.resume()
+        socket = URLSession.shared.webSocketTask(with: assetsListService.url)
+        socket?.resume()
         isConnected = true
         
     }
     
     private func disconnect() {
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
-        webSocketTask = nil
+        socket?.cancel(with: .goingAway, reason: nil)
+        socket = nil
         isConnected = false
     }
 }

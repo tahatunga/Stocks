@@ -14,8 +14,10 @@ struct StocksView: View {
     
     @State private var navigationPath = NavigationPath()
     
-    @State var stocks = AssetsListService().stocks.map {
-        StockRowModel(stockName: $0, stockPrice: 0)
+    @StateObject private var viewModel: StocksViewModel
+    
+    init(viewModel: StocksViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
     }
     
     var body: some View {
@@ -27,7 +29,7 @@ extension StocksView {
     private var content: some View {
         Group {
             NavigationStack(path: $navigationPath) {
-                List(stocks, id: \.self) { stock in
+                List(viewModel.stocks, id: \.self) { stock in
                     NavigationLink(destination: StockDetailsView()) {
                         StockRowView(viewModel: StockRowViewModel(stock: stock))
                     }
@@ -44,7 +46,7 @@ extension StocksView {
     
     let stockFeedService = StockFeedService(assetsListService: AssetsListService())
     let feedControlsViewModel = StockToolbarViewModel(stockFeedService: stockFeedService)
-    StocksView()
+    StocksView(viewModel: StocksViewModel(service: stockFeedService, assets: AssetsListService()))
         .environmentObject(stockFeedService)
         .environmentObject(feedControlsViewModel)
 }

@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct StockToolBarView: ToolbarContent {
+    
+    @ObservedObject var viewModel: StockToolbarViewModel
+    
     var body: some ToolbarContent {
 
         ToolbarItem(placement: .navigationBarLeading) {
             HStack(spacing: 6) {
-                Text("🔴")
+                Text(viewModel.isConnected ? "🟢" : "🔴")
                     .font(.system(size: 12))
                     .glassEffect()
             }
@@ -21,7 +24,7 @@ struct StockToolBarView: ToolbarContent {
 
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: {
-                
+                viewModel.toggleConnection()
             }) {
                 Text("Start")
                     .font(.subheadline)

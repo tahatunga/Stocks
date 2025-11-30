@@ -9,6 +9,9 @@ import SwiftUI
 
 struct StocksView: View {
     
+    @EnvironmentObject var stockFeedService: StockFeedService
+    @EnvironmentObject var feedControlsViewModel: StockToolbarViewModel
+    
     @State private var navigationPath = NavigationPath()
     
     @State var stocks = [
@@ -34,7 +37,7 @@ extension StocksView {
                     }
                 }
                 .toolbar {
-                    StockToolBarView()
+                    StockToolBarView(viewModel: feedControlsViewModel)
                 }
             }
         }

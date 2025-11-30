@@ -8,7 +8,17 @@
 import Foundation
 import Combine
 
-@Observable
-class StockToolbarViewModel {
+class StockToolbarViewModel: ObservableObject {
     
+    @Published private(set) var isConnected: Bool = false
+    
+    private let stockFeedService: StockFeedService
+    
+    init(stockFeedService: StockFeedService) {
+        self.stockFeedService = stockFeedService
+    }
+
+    func toggleConnection() {
+        stockFeedService.toggleConnection()
+    }
 }

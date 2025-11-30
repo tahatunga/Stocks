@@ -10,9 +10,20 @@ import SwiftUI
 @main
 struct StocksApp: App {
     
+    @StateObject private var stockFeedService: StockFeedService
+    @StateObject private var feedControlsViewModel: StockToolbarViewModel
+    
+    init() {
+        let service = StockFeedService()
+        _stockFeedService = StateObject(wrappedValue: service)
+        _feedControlsViewModel = StateObject(wrappedValue: StockToolbarViewModel(stockFeedService: service))
+    }
+    
     var body: some Scene {
         WindowGroup {
             StocksView()
+                .environmentObject(stockFeedService)
+                .environmentObject(feedControlsViewModel)
         }
     }
 }

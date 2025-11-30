@@ -31,6 +31,9 @@ extension StocksView {
                         Text(stock)
                     }
                 }
+                .toolbar {
+                    StockToolBarView()
+                }
             }
         }
     }

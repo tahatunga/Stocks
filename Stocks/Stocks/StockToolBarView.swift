@@ -7,12 +7,32 @@
 
 import SwiftUI
 
-struct StockToolBarView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+struct StockToolBarView: ToolbarContent {
+    var body: some ToolbarContent {
 
-#Preview {
-    StockToolBarView()
+        ToolbarItem(placement: .navigationBarLeading) {
+            HStack(spacing: 6) {
+                Text("🔴")
+                    .font(.system(size: 12))
+                    .glassEffect()
+            }
+        }
+        .sharedBackgroundVisibility(SwiftUICore.Visibility.hidden)
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+                
+            }) {
+                Text("Start")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .cornerRadius(8)
+            }
+        }
+        .sharedBackgroundVisibility(SwiftUICore.Visibility.hidden)
+
+    }
 }

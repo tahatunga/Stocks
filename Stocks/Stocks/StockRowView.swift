@@ -21,7 +21,7 @@ extension StockRowView {
             Text(viewModel.stock.stockName)
             Spacer()
             HStack(spacing: 4) {
-                Text(String(format: "%.2f", viewModel.stock.stockPrice))
+                Text(String(format: "%@ %.2f", viewModel.stock.currency, viewModel.stock.stockPrice))
                     .font(.caption)
                     .foregroundStyle(Color(viewModel.stock.textColor))
                 Image(systemName: viewModel.stock.trend.symbol())

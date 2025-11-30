@@ -37,6 +37,5 @@ struct StockToolBarView: ToolbarContent {
             }
         }
         .sharedBackgroundVisibility(SwiftUICore.Visibility.hidden)
-
     }
 }

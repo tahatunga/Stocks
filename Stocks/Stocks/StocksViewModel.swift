@@ -28,6 +28,10 @@ public final class StocksViewModel: ObservableObject {
         setupBindings()
     }
     
+    deinit {
+        cancellables.removeAll()
+    }
+
     private func setupBindings() {
         stockFeedService.priceUpdatePublisher
             .receive(on: DispatchQueue.main)

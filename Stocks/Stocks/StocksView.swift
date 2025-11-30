@@ -30,7 +30,7 @@ extension StocksView {
         Group {
             NavigationStack(path: $navigationPath) {
                 List(viewModel.stocks, id: \.self) { stock in
-                    NavigationLink(destination: StockDetailsView()) {
+                    NavigationLink(destination: StockDetailsView(viewModel: StockDetailsViewModel(stock: stock, feed: stockFeedService))) {
                         StockRowView(viewModel: StockRowViewModel(stock: stock))
                     }
                 }

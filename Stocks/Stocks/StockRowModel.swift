@@ -21,6 +21,7 @@ extension Trend {
 
 struct StockRowModel: Hashable {
     
+    let currency: String = "$"
     let stockName: String
     var stockPrice: Double
     var previosPrice: Double?

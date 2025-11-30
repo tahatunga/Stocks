@@ -14,21 +14,6 @@ protocol StockFeedServiceProtocol {
     func toggleConnection()
 }
 
-struct StockPriceUpdate: Codable {
-    let stock: String
-    var price: Double
-    var timestamp: TimeInterval
-}
-
-final class AssetsListService {
-    let url = URL(string: "wss://ws.postman-echo.com/raw")!
-    let stocks = [
-        "AAPL", "GOOG", "TSLA", "AMZN", "MSFT", "NVDA", "META", "NFLX",
-        "DIS", "BABA", "V", "JPM", "WMT", "JNJ", "MA", "PG", "UNH",
-        "HD", "PYPL", "INTC", "CMCSA", "VZ", "ADBE", "PFE", "BAC"
-    ]
-}
-
 func randomPrice() -> Double {
     round((Double.random(in: 10.0 ..< 300.0)) * 100) / 100
 }
@@ -81,13 +66,10 @@ final class StockFeedService: ObservableObject {
         
         let message = URLSessionWebSocketTask.Message.string(stringData)
 
-        if let data = try? encoder.encode(stock) {
-            
-            socket.send(message) { error in
-                if let error {
-                    //TODO:  Handle the error
-                    print("Error sending message: \(error)")
-                }
+        socket.send(message) { error in
+            if let error {
+                //TODO:  Handle the error
+                print("Error sending message: \(error)")
             }
         }
     }

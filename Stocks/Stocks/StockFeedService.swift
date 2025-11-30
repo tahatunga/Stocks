@@ -14,6 +14,12 @@ protocol StockFeedServiceProtocol {
     func toggleConnection()
 }
 
+struct StockPriceUpdate: Codable {
+    let stock: String
+    var price: Double
+    var timestamp: TimeInterval
+}
+
 final class AssetsListService {
     let url = URL(string: "wss://ws.postman-echo.com/raw")!
     let stocks = [
@@ -23,11 +29,21 @@ final class AssetsListService {
     ]
 }
 
+func randomPrice() -> Double {
+    round((Double.random(in: 10.0 ..< 300.0)) * 100) / 100
+}
+
 final class StockFeedService: ObservableObject {
 
     private let assetsListService: AssetsListService
+    private let trackedStocks: [StockPriceUpdate]
     private var socket: URLSessionWebSocketTask?
     private var updateTimer: Timer?
+    private let priceUpdateSubject = PassthroughSubject<StockPriceUpdate, Never>()
+    
+    var priceUpdatePublisher: AnyPublisher<StockPriceUpdate, Never> {
+        priceUpdateSubject.eraseToAnyPublisher()
+    }
     
     @Published private(set) var isConnected: Bool = false {
         didSet {
@@ -37,16 +53,91 @@ final class StockFeedService: ObservableObject {
     
     init(assetsListService: AssetsListService) {
         self.assetsListService = assetsListService
+        self.trackedStocks = assetsListService.stocks.map {
+            StockPriceUpdate(stock: $0, price: randomPrice(), timestamp: Date().timeIntervalSince1970)
+        }
     }
 
     deinit {
         stopTimer()
     }
-
+    
     private func updateAssetsPrices() {
-        print("Tik")
+        for var stock in trackedStocks {
+            stock.price = randomPrice()
+            stock.timestamp = Date().timeIntervalSince1970
+            sendPriceUpdate(for: stock)
+        }
     }
     
+    private func sendPriceUpdate(for stock: StockPriceUpdate) {
+        
+        let encoder = JSONEncoder()
+        guard isConnected else { return }
+        guard let socket else { return }
+        guard socket.state == .running else { return }
+        guard let data = try? encoder.encode(stock) else { return }
+        guard let stringData = String(data: data, encoding: .utf8) else { return }
+        
+        let message = URLSessionWebSocketTask.Message.string(stringData)
+
+        if let data = try? encoder.encode(stock) {
+            
+            socket.send(message) { error in
+                if let error {
+                    //TODO:  Handle the error
+                    print("Error sending message: \(error)")
+                }
+            }
+        }
+    }
+
+    private func receivePriceUpdates() {
+        guard let socket else { return }
+        guard socket.state == .running else { return }
+        socket.receive { [weak self] priceUpdate in
+            guard let self = self else { return }
+            
+            switch priceUpdate {
+            case .success(let message):
+                switch message {
+                case .string(let text):
+                    self.handleReceivedText(text)
+                case .data(let data):
+                    if let text = String(data: data, encoding: .utf8) {
+                        self.handleReceivedText(text)
+                    }
+                @unknown default:
+                    break
+                }
+                
+                // Continue receiving messages
+                self.receivePriceUpdates()
+                
+            case .failure:
+                DispatchQueue.main.async {
+                    self.disconnect()
+                    self.stopTimer()
+                    self.isConnected = false
+                }
+            }
+        }
+    }
+
+    private func handleReceivedText(_ text: String) {
+        guard let data = text.data(using: .utf8) else { return }
+        
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let update = try decoder.decode(StockPriceUpdate.self, from: data)
+            DispatchQueue.main.async {
+                self.priceUpdateSubject.send(update)
+            }
+        } catch {
+        }
+    }
+
     private func startTimer() {
         updateTimer?.invalidate()
         
@@ -85,7 +176,7 @@ final class StockFeedService: ObservableObject {
         socket = URLSession.shared.webSocketTask(with: assetsListService.url)
         socket?.resume()
         isConnected = true
-        
+        receivePriceUpdates()
     }
     
     private func disconnect() {

@@ -34,6 +34,7 @@ extension StocksView {
                         StockRowView(viewModel: StockRowViewModel(stock: stock))
                     }
                 }
+                .transaction { $0.animation = nil }
                 .toolbar {
                     StockToolBarView(viewModel: feedControlsViewModel)
                 }

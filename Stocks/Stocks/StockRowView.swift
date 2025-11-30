@@ -10,7 +10,6 @@ import SwiftUI
 struct StockRowView: View {
     
     let viewModel: StockRowViewModel
-    
     var body: some View {
         content
     }
@@ -21,8 +20,13 @@ extension StockRowView {
         HStack {
             Text(viewModel.stock.stockName)
             Spacer()
-            Text(String(format: "%.2f", viewModel.stock.stockPrice))
-                .font(.caption)
+            HStack(spacing: 4) {
+                Text(String(format: "%.2f", viewModel.stock.stockPrice))
+                    .font(.caption)
+                    .foregroundStyle(Color(viewModel.stock.textColor))
+                Image(systemName: viewModel.stock.trend.symbol())
+                    .font(.caption)
+            }
         }
     }
 }

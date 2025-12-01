@@ -27,6 +27,7 @@
 		965B18142EDC3DDF00D92844 /* Stocks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stocks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		965B18212EDC3DE000D92844 /* StocksTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StocksTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		965B182B2EDC3DE000D92844 /* StocksUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StocksUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		965B18712EDD9D2600D92844 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		965B180B2EDC3DDF00D92844 = {
 			isa = PBXGroup;
 			children = (
+				965B18712EDD9D2600D92844 /* README.md */,
 				965B18162EDC3DDF00D92844 /* Stocks */,
 				965B18242EDC3DE000D92844 /* StocksTests */,
 				965B182E2EDC3DE000D92844 /* StocksUITests */,

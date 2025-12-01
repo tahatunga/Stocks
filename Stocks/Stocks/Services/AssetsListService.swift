@@ -7,9 +7,9 @@
 
 import Foundation
 
-final class AssetsListService {
-    let url = URL(string: "wss://ws.postman-echo.com/raw")!
-    let stocks = [
+struct AssetsListService {
+    var url = URL(string: "wss://ws.postman-echo.com/raw")!
+    var stocks = [
         "AAPL", "GOOG", "TSLA", "AMZN", "MSFT", "NVDA", "META", "NFLX",
         "DIS", "BABA", "V", "JPM", "WMT", "JNJ", "MA", "PG", "UNH",
         "HD", "PYPL", "INTC", "CMCSA", "VZ", "ADBE", "PFE", "BAC"

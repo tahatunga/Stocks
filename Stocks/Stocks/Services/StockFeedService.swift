@@ -15,17 +15,62 @@ protocol StockFeedServiceProtocol {
     func toggleConnection()
 }
 
+protocol WebSocketTasking: AnyObject {
+    var state: URLSessionTask.State { get }
+    func resume()
+    func cancel(with closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?)
+    func send(_ message: URLSessionWebSocketTask.Message, completionHandler: @escaping @Sendable (Error?) -> Void)
+    func receive(completionHandler: @escaping @Sendable (Result<URLSessionWebSocketTask.Message, Error>) -> Void)
+}
+
+protocol WebSocketSessioning {
+    func webSocketTask(with url: URL) -> WebSocketTasking
+}
+
+struct SharedWebSocketSession: WebSocketSessioning {
+    func webSocketTask(with url: URL) -> WebSocketTasking {
+        URLSession.shared.webSocketTask(with: url)
+    }
+}
+
+protocol TimerScheduling {
+    func scheduledTimer(interval: TimeInterval, repeats: Bool, _ block: @escaping () -> Void) -> AnyCancellable
+}
+
+struct RunLoopTimerScheduler: TimerScheduling {
+    func scheduledTimer(interval: TimeInterval, repeats: Bool, _ block: @escaping () -> Void) -> AnyCancellable {
+        let timer = Timer.publish(every: interval, on: .main, in: .common).autoconnect()
+            .sink { _ in block() }
+        return AnyCancellable { timer.cancel() }
+    }
+}
+
+protocol PriceRandomizing {
+    func randomPrice() -> Double
+}
+
+struct DefaultPriceRandomizer: PriceRandomizing {
+    func randomPrice() -> Double { Double.random(in: 10...500).rounded() }
+}
+
+extension URLSessionWebSocketTask: WebSocketTasking {}
+
 func randomPrice() -> Double {
     round((Double.random(in: 10.0 ..< 300.0)) * 100) / 100
 }
 
 final class StockFeedService: ObservableObject {
-
+    
     private let assetsListService: AssetsListService
     private let trackedStocks: [StockPriceUpdate]
+    private let session: WebSocketSessioning
+    private let timer: TimerScheduling
+    private let randomizer: PriceRandomizing
+    private let priceUpdateSubject = PassthroughSubject<[StockPriceUpdate], Never>()
+    
     private var socket: URLSessionWebSocketTask?
     private var updateTimer: Timer?
-    private let priceUpdateSubject = PassthroughSubject<[StockPriceUpdate], Never>()
+
     private var batchUpdates = [StockPriceUpdate]()
     
     var priceUpdatePublisher: AnyPublisher<[StockPriceUpdate], Never> {
@@ -38,7 +83,14 @@ final class StockFeedService: ObservableObject {
         }
     }
     
-    init(assetsListService: AssetsListService) {
+    init(assetsListService: AssetsListService,
+         session: WebSocketSessioning = SharedWebSocketSession(),
+         timer: TimerScheduling = RunLoopTimerScheduler(),
+         randomizer: PriceRandomizing = DefaultPriceRandomizer()) {
+        
+        self.session = session
+        self.timer = timer
+        self.randomizer = randomizer
         self.assetsListService = assetsListService
         self.trackedStocks = assetsListService.stocks.map {
             StockPriceUpdate(stock: $0, price: randomPrice(), timestamp: Date().timeIntervalSince1970)
@@ -49,7 +101,8 @@ final class StockFeedService: ObservableObject {
         stopTimer()
     }
     
-    private func updateAssetsPrices() async {
+    // private -> internal so it can be called by test extension
+    internal func updateAssetsPrices() async {
         let total: TimeInterval = 1.0
         let delay = total / Double(trackedStocks.count) // 0.04 for 25
         let nanos = UInt64(delay * 1_000_000_000)
@@ -116,7 +169,7 @@ final class StockFeedService: ObservableObject {
         }
     }
 
-    private func handleReceivedText(_ text: String) {
+    internal func handleReceivedText(_ text: String) {
         guard let data = text.data(using: .utf8) else { return }
         
         do {
@@ -182,3 +235,14 @@ final class StockFeedService: ObservableObject {
         isConnected = false
     }
 }
+
+// Add this extension in your test target, ideally in a file like StockFeedService+TestHelpers.swift
+#if DEBUG
+
+extension StockFeedService {
+    @MainActor
+    func performTestTick_sendUpdatesOnce() async {
+        await updateAssetsPrices()
+    }
+}
+#endif

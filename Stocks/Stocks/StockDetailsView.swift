@@ -47,7 +47,5 @@ extension StockDetailsView {
 
 #Preview {
     let stockFeedService = StockFeedService(assetsListService: AssetsListService())
-    let feedControlsViewModel = StockToolbarViewModel(stockFeedService: stockFeedService)
-    let viewModel = StockDetailsViewModel(stock: StockRowModel(stockName: "Stock", stockPrice: 10.0), feed: stockFeedService)
-    StockDetailsView(viewModel: viewModel)
+    StockDetailsView(viewModel: StockDetailsViewModel(stock: StockRowModel(stockName: "Stock", stockPrice: 10.0), feed: stockFeedService))
 }

@@ -58,7 +58,10 @@ public final class StocksViewModel: ObservableObject {
                 if $0.stockPrice == $1.stockPrice { return $0.stockName < $1.stockName }
                 return $0.stockPrice > $1.stockPrice
             }
-            await MainActor.run { self.stocks = sortedModels }
+            await MainActor.run {
+                self.stocks = sortedModels
+                self.setFlashOffAfter1s()
+            }
         }
     }
     
@@ -66,4 +69,20 @@ public final class StocksViewModel: ObservableObject {
         return updatedStockPrices.sorted { $0.price > $1.price }
     }
     
+    @MainActor
+    private func setFlashOffAfter1s() {
+        
+        let currentStocks = self.stocks
+        
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            guard let self else { return }
+            var noFlasingStocks: [StockRowModel] = []
+            for var stock in currentStocks {
+                stock.flash = false
+                noFlasingStocks.append(stock)
+            }
+            self.stocks = noFlasingStocks
+        }
+    }
 }

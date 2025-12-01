@@ -35,6 +35,7 @@ struct StockRowModel: Hashable {
     }
     
     var textColor: UIColor {
+        guard flash else { return .label }
         switch trend {
         case .up: return .systemGreen
         case .down: return .systemRed

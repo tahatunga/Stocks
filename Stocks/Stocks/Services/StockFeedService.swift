@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 
 protocol StockFeedServiceProtocol {
+    var priceUpdatePublisher: AnyPublisher<[StockPriceUpdate], Never> { get }
     var isConnected: Bool { get }
     func toggleConnection()
 }
@@ -24,9 +25,10 @@ final class StockFeedService: ObservableObject {
     private let trackedStocks: [StockPriceUpdate]
     private var socket: URLSessionWebSocketTask?
     private var updateTimer: Timer?
-    private let priceUpdateSubject = PassthroughSubject<StockPriceUpdate, Never>()
+    private let priceUpdateSubject = PassthroughSubject<[StockPriceUpdate], Never>()
+    private var batchUpdates = [StockPriceUpdate]()
     
-    var priceUpdatePublisher: AnyPublisher<StockPriceUpdate, Never> {
+    var priceUpdatePublisher: AnyPublisher<[StockPriceUpdate], Never> {
         priceUpdateSubject.eraseToAnyPublisher()
     }
     
@@ -47,12 +49,20 @@ final class StockFeedService: ObservableObject {
         stopTimer()
     }
     
-    private func updateAssetsPrices() {
+    private func updateAssetsPrices() async {
+        let total: TimeInterval = 1.0
+        let delay = total / Double(trackedStocks.count) // 0.04 for 25
+        let nanos = UInt64(delay * 1_000_000_000)
+        
+        batchUpdates.removeAll()
+        
         for var stock in trackedStocks {
             stock.price = randomPrice()
             stock.timestamp = Date().timeIntervalSince1970
             sendPriceUpdate(for: stock)
+            try? await Task.sleep(nanoseconds: nanos)
         }
+
     }
     
     private func sendPriceUpdate(for stock: StockPriceUpdate) {
@@ -113,8 +123,11 @@ final class StockFeedService: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let update = try decoder.decode(StockPriceUpdate.self, from: data)
-            DispatchQueue.main.async {
-                self.priceUpdateSubject.send(update)
+            self.batchUpdates.append(update)
+            if self.batchUpdates.count == self.trackedStocks.count {
+                DispatchQueue.main.async {
+                    self.priceUpdateSubject.send(self.batchUpdates)
+                }
             }
         } catch {
         }
@@ -125,7 +138,9 @@ final class StockFeedService: ObservableObject {
         
         updateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             guard let self = self, self.isConnected else { return }
-            self.updateAssetsPrices()
+            Task {
+                await self.updateAssetsPrices()
+            }
         }
         
         if let timer = updateTimer {

@@ -30,15 +30,15 @@ class StockDetailsViewModel: ObservableObject {
     private func bindToStockPrice() {
         stockFeedService.priceUpdatePublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] message in
-                self?.handlePriceUpdate(message)
+            .sink { [weak self] batchUpdates in
+                self?.handlePriceUpdate(batchUpdates)
             }
             .store(in: &cancellables)
     }
 
-    private func handlePriceUpdate(_ message: StockPriceUpdate) {
-        guard message.stock == stock.stockName else { return }
+    private func handlePriceUpdate(_ message: [StockPriceUpdate]) {
+        guard let stockUpdate = (message.filter { $0.stock == stock.stockName }).first else { return }
         self.stock.previosPrice = self.stock.stockPrice
-        stock.stockPrice = message.price
+        stock.stockPrice = stockUpdate.price
     }
 }

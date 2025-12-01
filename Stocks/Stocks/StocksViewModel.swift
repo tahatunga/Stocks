@@ -8,6 +8,8 @@
 import Foundation
 import Combine
 
+typealias StockName = String
+
 public final class StocksViewModel: ObservableObject {
     
     private let stockFeedService: StockFeedService
@@ -35,21 +37,33 @@ public final class StocksViewModel: ObservableObject {
     private func setupBindings() {
         stockFeedService.priceUpdatePublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] message in
-                self?.handlePriceUpdate(message)
+            .sink { [weak self] batchUpdates in
+                self?.handlePriceUpdate(batchUpdates)
             }
             .store(in: &cancellables)
     }
 
-    private func handlePriceUpdate(_ message: StockPriceUpdate) {
-        if let index = stocks.firstIndex(where: { $0.stockName == message.stock }),
-           stocks[index].timestamp ?? 0.0 < message.timestamp { // ensure the update will be with newer value
-            stocks[index].previosPrice = stocks[index].stockPrice
-            stocks[index].stockPrice = message.price
-            // The following can be optimised in many ways
-            self.stocks = stocks.sorted {
-                $0.stockPrice > $1.stockPrice
+    private func handlePriceUpdate(_ batchUpdates: [StockPriceUpdate]) {
+
+        let currentStocks = self.stocks
+        Task.detached(priority: .low) { [currentStocks] in
+            var rowModelsDictionary = Dictionary(uniqueKeysWithValues: currentStocks.map { ($0.stockName, $0) })
+            for update in batchUpdates {
+                if let oldStock = rowModelsDictionary[update.stock], oldStock.timestamp ?? 0 < update.timestamp {
+                    let updatedStock = StockRowModel(stockName: update.stock, stockPrice: update.price, previosPrice: oldStock.stockPrice, timestamp: update.timestamp, flash: true)
+                    rowModelsDictionary[update.stock] = updatedStock
+                }
             }
+            let sortedModels = rowModelsDictionary.values.sorted {
+                if $0.stockPrice == $1.stockPrice { return $0.stockName < $1.stockName }
+                return $0.stockPrice > $1.stockPrice
+            }
+            await MainActor.run { self.stocks = sortedModels }
         }
     }
+    
+    private func sortStocksByPrice(updatedStockPrices: [StockPriceUpdate]) -> [StockPriceUpdate] {
+        return updatedStockPrices.sorted { $0.price > $1.price }
+    }
+    
 }

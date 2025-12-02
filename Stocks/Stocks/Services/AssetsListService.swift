@@ -7,6 +7,8 @@
 
 import Foundation
 
+// TODO: Add protocol describing the service, force the dependables to use the abstraction
+
 struct AssetsListService {
     var url = URL(string: "wss://ws.postman-echo.com/raw")!
     var stocks = [

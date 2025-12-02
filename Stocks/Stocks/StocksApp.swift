@@ -11,12 +11,12 @@ import SwiftUI
 struct StocksApp: App {
     
     @StateObject private var stockFeedService: StockFeedService
-    @StateObject private var feedControlsViewModel: StockToolbarViewModel
+    @StateObject private var feedControlsViewModel: StockToolbarViewModel // This could be reused trough the app for the top bar
     
     init() {
-        let service = StockFeedService(assetsListService: AssetsListService())
-        _stockFeedService = StateObject(wrappedValue: service)
-        _feedControlsViewModel = StateObject(wrappedValue: StockToolbarViewModel(stockFeedService: service))
+        let stockFeedService = StockFeedService(assetsListService: AssetsListService())
+        _stockFeedService = StateObject(wrappedValue: stockFeedService)
+        _feedControlsViewModel = StateObject(wrappedValue: StockToolbarViewModel(stockFeedService: stockFeedService))
     }
     
     var body: some Scene {

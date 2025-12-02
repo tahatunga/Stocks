@@ -235,14 +235,3 @@ final class StockFeedService: ObservableObject {
         isConnected = false
     }
 }
-
-// Add this extension in your test target, ideally in a file like StockFeedService+TestHelpers.swift
-#if DEBUG
-
-extension StockFeedService {
-    @MainActor
-    func performTestTick_sendUpdatesOnce() async {
-        await updateAssetsPrices()
-    }
-}
-#endif

@@ -7,24 +7,25 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 typealias StockName = String
 
+@MainActor
 public final class StocksViewModel: ObservableObject {
     
-    private let stockFeedService: StockFeedService
-    private let assets: AssetsListService
+    private let stockFeedService: StockFeedServiceProtocol
+    private let assets: AssetsListService // TODO: remove tide coupling
     private var cancellables = Set<AnyCancellable>()
 
-    @Published var stocks: [StockRowModel]
-    
-    init(service: StockFeedService, assets: AssetsListService) {
+    @Published private(set) var stocks: [StockRowModel]
+    @Published var navigationPath = NavigationPath()
+
+    init(service: StockFeedServiceProtocol, assets: AssetsListService) {
         self.stockFeedService = service
         self.assets = assets
         let stocks = assets.stocks.map {
             StockRowModel(stockName: $0, stockPrice: 0)
-        }.sorted {
-            $0.stockPrice > $1.stockPrice
         }
         self.stocks = stocks
         setupBindings()
@@ -34,6 +35,25 @@ public final class StocksViewModel: ObservableObject {
         cancellables.removeAll()
     }
 
+    func handleIncomingURL(_ url: URL) {
+        guard url.scheme == "stocks" else { return }
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return }
+        guard let action = components.host, action == "symbol" else { return }
+        
+        let stockName = String(components.path.dropFirst())
+        if let stockForNavigation = stockForNavigation(for: stockName) {
+            navigationPath.append(stockForNavigation)
+        }
+    }
+    
+    func stockForNavigation(for stockName: StockName) -> StockRowModel? {
+        guard let stock = stocks.first(where: { $0.stockName == stockName }) else {
+            return nil
+        }
+        
+        return stock
+    }
+    
     private func setupBindings() {
         stockFeedService.priceUpdatePublisher
             .receive(on: DispatchQueue.main)
@@ -43,10 +63,14 @@ public final class StocksViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    // TODO: The models can be extracted to Factory / Builder + Mapper
     private func handlePriceUpdate(_ batchUpdates: [StockPriceUpdate]) {
 
         let currentStocks = self.stocks
-        Task.detached(priority: .low) { [currentStocks] in
+        
+        // Using detached task to be able to easily scale to more assets
+        // TODO: - Add ordering / cancellation of the detached task to prevent from incorrect update urder
+        Task.detached(priority: .userInitiated) { [currentStocks] in
             var rowModelsDictionary = Dictionary(uniqueKeysWithValues: currentStocks.map { ($0.stockName, $0) })
             for update in batchUpdates {
                 if let oldStock = rowModelsDictionary[update.stock], oldStock.timestamp ?? 0 < update.timestamp {
@@ -60,7 +84,7 @@ public final class StocksViewModel: ObservableObject {
             }
             await MainActor.run {
                 self.stocks = sortedModels
-                self.setFlashOffAfter1s()
+                self.resetFlashAfterDelay()
             }
         }
     }
@@ -70,7 +94,7 @@ public final class StocksViewModel: ObservableObject {
     }
     
     @MainActor
-    private func setFlashOffAfter1s() {
+    private func resetFlashAfterDelay() {
         
         let currentStocks = self.stocks
         

@@ -30,9 +30,22 @@
 		965B18712EDD9D2600D92844 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		965B18A52EDED01600D92844 /* Exceptions for "Stocks" folder in "Stocks" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 965B18132EDC3DDF00D92844 /* Stocks */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		965B18162EDC3DDF00D92844 /* Stocks */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				965B18A52EDED01600D92844 /* Exceptions for "Stocks" folder in "Stocks" target */,
+			);
 			path = Stocks;
 			sourceTree = "<group>";
 		};
@@ -402,6 +415,7 @@
 				DEVELOPMENT_TEAM = JKQQJ48844;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stocks/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,6 +448,7 @@
 				DEVELOPMENT_TEAM = JKQQJ48844;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Stocks/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

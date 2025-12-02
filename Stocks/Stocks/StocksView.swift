@@ -12,8 +12,6 @@ struct StocksView: View {
     @EnvironmentObject var stockFeedService: StockFeedService
     @EnvironmentObject var feedControlsViewModel: StockToolbarViewModel
     
-    @State private var navigationPath = NavigationPath()
-    
     @StateObject private var viewModel: StocksViewModel
     
     init(viewModel: StocksViewModel) {
@@ -28,7 +26,7 @@ struct StocksView: View {
 extension StocksView {
     private var content: some View {
         Group {
-            NavigationStack(path: $navigationPath) {
+            NavigationStack(path: $viewModel.navigationPath) {
                 List(viewModel.stocks, id: \.self) { stock in
                     NavigationLink(destination: StockDetailsView(viewModel: StockDetailsViewModel(stock: stock, feed: stockFeedService))) {
                         StockRowView(viewModel: StockRowViewModel(stock: stock))
@@ -37,6 +35,12 @@ extension StocksView {
                 .transaction { $0.animation = nil }
                 .toolbar {
                     StockToolBarView(viewModel: feedControlsViewModel)
+                }
+                .onOpenURL { incomingURL in
+                    viewModel.handleIncomingURL(incomingURL)
+                }
+                .navigationDestination(for: StockRowModel.self) { stockForNavigation in
+                    StockDetailsView(viewModel: StockDetailsViewModel(stock: stockForNavigation, feed: stockFeedService))
                 }
             }
         }

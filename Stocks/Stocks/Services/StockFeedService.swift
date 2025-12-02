@@ -59,7 +59,7 @@ func randomPrice() -> Double {
     round((Double.random(in: 10.0 ..< 300.0)) * 100) / 100
 }
 
-final class StockFeedService: ObservableObject {
+final class StockFeedService: ObservableObject, StockFeedServiceProtocol {
     
     private let assetsListService: AssetsListService
     private let trackedStocks: [StockPriceUpdate]

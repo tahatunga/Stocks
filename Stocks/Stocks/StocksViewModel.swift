@@ -17,6 +17,7 @@ public final class StocksViewModel: ObservableObject {
     private let stockFeedService: StockFeedServiceProtocol
     private let assets: AssetsListService // TODO: remove tide coupling
     private var cancellables = Set<AnyCancellable>()
+    private var priceUpdateTask: Task<Void, Never>?
 
     @Published private(set) var stocks: [StockRowModel]
     @Published var navigationPath = NavigationPath()
@@ -33,6 +34,7 @@ public final class StocksViewModel: ObservableObject {
     
     deinit {
         cancellables.removeAll()
+        priceUpdateTask?.cancel()
     }
 
     func handleIncomingURL(_ url: URL) {
@@ -66,11 +68,15 @@ public final class StocksViewModel: ObservableObject {
     // TODO: The models can be extracted to Factory / Builder + Mapper
     private func handlePriceUpdate(_ batchUpdates: [StockPriceUpdate]) {
 
+        priceUpdateTask?.cancel()
+        
         let currentStocks = self.stocks
         
         // Using detached task to be able to easily scale to more assets
         // TODO: - Add ordering / cancellation of the detached task to prevent from incorrect update urder
         Task.detached(priority: .userInitiated) { [currentStocks] in
+            
+            guard !Task.isCancelled else { return }
             var rowModelsDictionary = Dictionary(uniqueKeysWithValues: currentStocks.map { ($0.stockName, $0) })
             for update in batchUpdates {
                 if let oldStock = rowModelsDictionary[update.stock], oldStock.timestamp ?? 0 < update.timestamp {
@@ -82,6 +88,7 @@ public final class StocksViewModel: ObservableObject {
                 if $0.stockPrice == $1.stockPrice { return $0.stockName < $1.stockName }
                 return $0.stockPrice > $1.stockPrice
             }
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 self.stocks = sortedModels
                 self.resetFlashAfterDelay()
